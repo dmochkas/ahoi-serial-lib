@@ -46,7 +46,7 @@ secure_status secure_ahoi_packet(ahoi_packet_t* ahoi_packet) {
 
     const int enc_result = ascon_aead_encrypt(
         tag_buf, ascon_buf,
-        (const uint8_t*) ahoi_packet->payload, pl_size,
+        ahoi_packet->payload, pl_size,
         header, HEADER_SIZE,
         nonce_buf, key
     );
@@ -72,7 +72,7 @@ verify_status verify_packet(ahoi_packet_t* ahoi_packet) {
     const int dec_result = ascon_aead_decrypt(
         ascon_buf,
         tag, ahoi_packet->payload, ciphertext_len,
-        ahoi_packet, HEADER_SIZE,
+        (const uint8_t*) ahoi_packet, HEADER_SIZE,
         nonce_buf, key
     );
 

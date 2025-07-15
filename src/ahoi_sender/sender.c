@@ -7,20 +7,28 @@
 #include "core.h"
 
 packet_send_status send_ahoi_packet(int fd, const ahoi_packet_t* ahoi_packet) {
-    const uint8_t* abstract_packet = (const uint8_t*) ahoi_packet;
-    uint8_t escaped_packet[512];
+    uint8_t escaped_packet[2 * MAX_PACKET_SIZE + 4];
     int packet_len = 0;
 
     // Framing: DLE-STX
     escaped_packet[packet_len++] = 0x10;
     escaped_packet[packet_len++] = 0x02;
 
-    // Escape
-    for (int i = 0; i < HEADER_SIZE + ahoi_packet->pl_size; i++) {
-        if (abstract_packet[i] == 0x10) {
+    // Escape header
+    const uint8_t* header = (const uint8_t*) ahoi_packet;
+    for (int i = 0; i < HEADER_SIZE; i++) {
+        if (header[i] == 0x10) {
             escaped_packet[packet_len++] = 0x10;
         }
-        escaped_packet[packet_len++] = abstract_packet[i];
+        escaped_packet[packet_len++] = header[i];
+    }
+
+    // Escape payload
+    for (int i = 0; i < ahoi_packet->pl_size; i++) {
+        if (ahoi_packet->payload[i] == 0x10) {
+            escaped_packet[packet_len++] = 0x10;
+        }
+        escaped_packet[packet_len++] = ahoi_packet->payload[i];
     }
 
     // Framing: DLE-ETX
@@ -38,10 +46,6 @@ packet_send_status send_ahoi_packet(int fd, const ahoi_packet_t* ahoi_packet) {
         fprintf(stderr, "Warning: Partial write (%zd of %d bytes)\n", bytes_written, packet_len);
         return PACKET_SEND_KO;
     }
-
-    // printf("Sent escaped_packet (%d bytes): ", packet_len);
-    // for (int i = 0; i < packet_len; i++) printf("%02X ", escaped_packet[i]);
-    // printf("\n");
 
     increment_seq_number();
     return PACKET_SEND_OK;

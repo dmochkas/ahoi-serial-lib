@@ -29,5 +29,3 @@ if (WITH_RECEIVER)
     add_subdirectory(src/ahoi_receiver)
     target_sources(${AHOI_LIB_NAME} PRIVATE $<TARGET_OBJECTS:${RECEIVER_LIB_NAME}>)
 endif ()
-
-
