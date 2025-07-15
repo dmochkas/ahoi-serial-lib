@@ -29,3 +29,15 @@ if (WITH_RECEIVER)
     add_subdirectory(src/ahoi_receiver)
     target_sources(${AHOI_LIB_NAME} PRIVATE $<TARGET_OBJECTS:${RECEIVER_LIB_NAME}>)
 endif ()
+
+if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.13.0")
+    target_link_options(${AHOI_LIB_NAME} PRIVATE $<$<CONFIG:DEBUG>:-fsanitize=address,undefined>)
+endif ()
+
+if (ENABLE_TESTS)
+    enable_testing()
+    option(WITH_EXAMPLES "" OFF)
+    add_git_submodule(DIRECTORY "thirdparty/cmocka"
+            PROPAGATE ON)
+    add_subdirectory(tests)
+endif ()
