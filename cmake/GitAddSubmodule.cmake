@@ -1,7 +1,7 @@
 function(add_git_submodule)
-    cmake_parse_arguments(add_submodule "" "DIRECTORY;PROPAGATE" "PATCHES" ${ARGN})
+    cmake_parse_arguments(add_submodule "" "DIRECTORY;PROPAGATE;CMP_TARGET" "PATCHES" ${ARGN})
 
-    if (NOT add_submodule_DIRECTORY)
+    if (NOT DEFINED add_submodule_DIRECTORY)
         message(FATAL_ERROR "Missing required argument: DIRECTORY")
     endif ()
 
@@ -13,10 +13,7 @@ function(add_git_submodule)
 
     set(FULL_DIR ${PROJECT_SOURCE_DIR}/${add_submodule_DIRECTORY})
 
-    file(GLOB DIR_CONTENTS "${FULL_DIR}/*")
-    list(LENGTH DIR_CONTENTS RES_LEN)
-
-    if (RES_LEN LESS_EQUAL 1)
+    if (NOT DEFINED add_submodule_CMP_TARGET OR NOT TARGET ${add_submodule_CMP_TARGET})
         message(STATUS "Cloning ${FULL_DIR} submodule")
         execute_process(COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive -- ${FULL_DIR}
                 WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})

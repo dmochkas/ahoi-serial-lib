@@ -16,7 +16,8 @@ add_library(${AHOI_LIB_NAME} STATIC)
 
 add_git_submodule(DIRECTORY "thirdparty/ascon-c"
         PROPAGATE ON
-        PATCHES "patches/ascon-fix.patch")
+        PATCHES "patches/ascon-fix.patch"
+        CMP_TARGET ${ASCON_LIB_NAME})
 add_subdirectory(src/ahoi_commons)
 
 if (WITH_SENDER)
@@ -38,7 +39,8 @@ if (ENABLE_TESTS)
     option(WITH_EXAMPLES "" OFF)
     if(NOT TARGET cmocka)
         add_git_submodule(DIRECTORY "thirdparty/cmocka"
-                          PROPAGATE ON)
+                          PROPAGATE ON
+                          CMP_TARGET "cmocka")
     endif ()
     add_subdirectory(tests)
 endif ()
