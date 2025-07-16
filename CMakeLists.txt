@@ -8,9 +8,9 @@ include(config.cmake)
 include(GitAddSubmodule)
 
 set(ASCON_LIB_NAME "crypto_aead_${ALG_NAME}_${IMPL_LIST}")
-set(COMMONS_LIB_NAME "commons-lib")
-set(SENDER_LIB_NAME "sender-objects")
-set(RECEIVER_LIB_NAME "receiver-objects")
+set(COMMONS_LIB_NAME "ahoi-commons-lib")
+set(SENDER_LIB_NAME "ahoi-sender-objects")
+set(RECEIVER_LIB_NAME "ahoi-receiver-objects")
 
 add_library(${AHOI_LIB_NAME} STATIC)
 
@@ -23,7 +23,6 @@ if (WITH_SENDER)
     add_subdirectory(src/ahoi_sender)
     target_sources(${AHOI_LIB_NAME} PRIVATE $<TARGET_OBJECTS:${SENDER_LIB_NAME}>)
 endif ()
-
 
 if (WITH_RECEIVER)
     add_subdirectory(src/ahoi_receiver)

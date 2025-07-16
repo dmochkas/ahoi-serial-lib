@@ -66,7 +66,7 @@ verify_status verify_packet(ahoi_packet_t* ahoi_packet) {
 
     if (generate_nonce(seq_number, nonce_buf, NONCE_SIZE) != NONCE_GEN_OK) {
         fprintf(stderr, "Nonce generation failed!\n");
-        return SECURE_KO;
+        return VERIFY_KO;
     }
 
     const int dec_result = ascon_aead_decrypt(

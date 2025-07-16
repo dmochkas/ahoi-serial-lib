@@ -11,7 +11,7 @@ function(add_git_submodule)
 
     find_package(Git REQUIRED)
 
-    set(FULL_DIR ${CMAKE_SOURCE_DIR}/${add_submodule_DIRECTORY})
+    set(FULL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/${add_submodule_DIRECTORY})
 
     file(GLOB DIR_CONTENTS "${FULL_DIR}/*")
     list(LENGTH DIR_CONTENTS RES_LEN)
@@ -19,12 +19,12 @@ function(add_git_submodule)
     if (RES_LEN LESS_EQUAL 1)
         message(STATUS "Cloning ${FULL_DIR} submodule")
         execute_process(COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive -- ${FULL_DIR}
-                WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+                WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
         foreach (patch IN LISTS add_submodule_PATCHES)
             message(STATUS "Applying patch ${patch}")
             execute_process(COMMAND ${GIT_EXECUTABLE} apply ${patch}
-                            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+                            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
         endforeach ()
     endif ()
 
