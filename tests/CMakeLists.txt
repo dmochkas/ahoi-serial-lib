@@ -5,8 +5,8 @@ add_executable(${SECURITY_TEST_NAME} security_test.c)
 
 target_link_libraries(${SECURITY_TEST_NAME} cmocka)
 
-target_include_directories(${SECURITY_TEST_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/include/priv")
-target_include_directories(${SECURITY_TEST_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/include/ahoi_serial")
+target_include_directories(${SECURITY_TEST_NAME} PRIVATE "${PROJECT_SOURCE_DIR}/include/priv")
+target_include_directories(${SECURITY_TEST_NAME} PRIVATE "${PROJECT_SOURCE_DIR}/include/ahoi_serial")
 target_sources(${SECURITY_TEST_NAME} PRIVATE $<TARGET_OBJECTS:${COMMONS_LIB_NAME}>)
 
 if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.13.0")

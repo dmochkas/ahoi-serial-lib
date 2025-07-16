@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 project(ahoi_serial C)
 
 set(CMAKE_C_STANDARD 11)
-set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
 include(config.cmake)
 include(GitAddSubmodule)
@@ -36,7 +36,9 @@ endif ()
 if (ENABLE_TESTS)
     enable_testing()
     option(WITH_EXAMPLES "" OFF)
-    add_git_submodule(DIRECTORY "thirdparty/cmocka"
-            PROPAGATE ON)
+    if(NOT TARGET cmocka)
+        add_git_submodule(DIRECTORY "thirdparty/cmocka"
+                          PROPAGATE ON)
+    endif ()
     add_subdirectory(tests)
 endif ()
