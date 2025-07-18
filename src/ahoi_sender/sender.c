@@ -7,6 +7,8 @@
 #include "core.h"
 
 packet_send_status send_ahoi_packet(int fd, const ahoi_packet_t* ahoi_packet) {
+    // TODO: Assign sequence number to ahoi_packet
+
     uint8_t escaped_packet[2 * MAX_PACKET_SIZE + 4];
     int packet_len = 0;
 

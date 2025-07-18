@@ -13,7 +13,7 @@ static uint8_t ascon_buf[MAX_SECURE_PAYLOAD_SIZE] = {0};
 static uint8_t nonce_buf[NONCE_SIZE] = {0};
 
 
-void store_key(const uint8_t* new_key) {
+void sec_store_key(const uint8_t* new_key) {
     memcpy(key, new_key, KEY_SIZE);
 }
 

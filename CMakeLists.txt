@@ -22,17 +22,15 @@ add_subdirectory(src/ahoi_commons)
 
 if (WITH_SENDER)
     add_subdirectory(src/ahoi_sender)
-    target_sources(${AHOI_LIB_NAME} PRIVATE $<TARGET_OBJECTS:${SENDER_LIB_NAME}>)
+    target_sources(${AHOI_LIB_NAME} PRIVATE $<TARGET_OBJECTS:${SENDER_LIB_NAME}> $<TARGET_OBJECTS:${COMMONS_LIB_NAME}> $<TARGET_OBJECTS:${ASCON_LIB_NAME}>)
 endif ()
 
 if (WITH_RECEIVER)
     add_subdirectory(src/ahoi_receiver)
-    target_sources(${AHOI_LIB_NAME} PRIVATE $<TARGET_OBJECTS:${RECEIVER_LIB_NAME}>)
+    target_sources(${AHOI_LIB_NAME} PRIVATE $<TARGET_OBJECTS:${RECEIVER_LIB_NAME}> $<TARGET_OBJECTS:${COMMONS_LIB_NAME}> $<TARGET_OBJECTS:${ASCON_LIB_NAME}>)
 endif ()
 
-if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.13.0")
-    target_link_options(${AHOI_LIB_NAME} PRIVATE $<$<CONFIG:DEBUG>:-fsanitize=address,undefined>)
-endif ()
+target_include_directories(${AHOI_LIB_NAME} PUBLIC "${PROJECT_SOURCE_DIR}/include/pub")
 
 if (ENABLE_TESTS)
     enable_testing()

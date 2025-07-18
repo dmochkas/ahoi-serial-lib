@@ -2,7 +2,13 @@
 
 #include <stdio.h>
 
+#include "security.h"
+
 uint8_t seq_number = 0;
+
+void store_key(const uint8_t* new_key) {
+    sec_store_key(new_key);
+}
 
 void increment_seq_number() {
     seq_number = (seq_number +1) % 256;

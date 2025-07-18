@@ -21,7 +21,7 @@ typedef enum {
     VERIFY_KO
 } verify_status;
 
-void store_key(const uint8_t* new_key);
+void sec_store_key(const uint8_t* new_key);
 
 nonce_gen_status generate_nonce(uint8_t seq, uint8_t* buf, size_t nonce_size);
 
