@@ -3,11 +3,12 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
+#include <poll.h>
 
 #include "common_defs.h"
 #include "security.h"
 
-packet_rcv_status receive_ahoi_packet(const int fd, void (*cb)(const ahoi_packet_t*)) {
+packet_rcv_status receive_ahoi_packet(const int fd, void (*cb)(const ahoi_packet_t*), void (*ack_cb)(const ahoi_packet_t*), int timeout_ms) {
     static uint8_t recv_buf[RECV_BUF_SIZE] = {0};
     static uint8_t payload_buf[MAX_PAYLOAD_SIZE] = {0};
     static ahoi_packet_t staging_packet = {
@@ -16,7 +17,25 @@ packet_rcv_status receive_ahoi_packet(const int fd, void (*cb)(const ahoi_packet
 
     int buf_pos = 0;
     int in_packet = 0;
-    while (1) {
+    struct pollfd pfd;
+    int retval;
+    int packet_received = 0;
+
+    pfd.fd = fd;
+    pfd.events = POLLIN;
+
+    while (!packet_received) {
+        retval = poll(&pfd, 1, timeout_ms);
+        if (retval == -1) {
+            fprintf(stderr,"Poll error\n");
+            return PACKET_RCV_KO;
+        }
+        if (retval == 0) {
+            return PACKET_RCV_TIMEOUT;
+        }
+        if (!(pfd.revents & POLLIN)) {
+            continue;
+        }
         uint8_t byte;
         if (read(fd, &byte, 1) != 1) continue;
 
@@ -30,8 +49,13 @@ packet_rcv_status receive_ahoi_packet(const int fd, void (*cb)(const ahoi_packet
                 if (read(fd, &byte, 1) == 1) {
                     if (byte == 0x03) {
                         decode_ahoi_packet(recv_buf, buf_pos, &staging_packet);
-                        cb(&staging_packet);
+                        if (staging_packet.type == AHOI_ACK_TYPE && ack_cb != NULL) {
+                            ack_cb(&staging_packet);
+                        } else if (cb != NULL) {
+                            cb(&staging_packet);
+                        }
                         in_packet = 0;
+                        packet_received = 1;
                     } else if (byte == 0x10) {
                         recv_buf[buf_pos++] = 0x10;
                     }
@@ -41,6 +65,7 @@ packet_rcv_status receive_ahoi_packet(const int fd, void (*cb)(const ahoi_packet
             }
         }
     }
+    return PACKET_RCV_OK;
 }
 
 packet_decode_status decode_ahoi_packet(const uint8_t *data, const size_t len, ahoi_packet_t* ahoi_packet) {

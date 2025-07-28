@@ -5,15 +5,17 @@
 
 #define SECONDS_IN_HOUR 3600
 
+#define AHOI_ACK_TYPE 0x7F
+
 extern uint8_t seq_number;
 
-// A and R flags are incompatible
+// Solo R flag is not used
 typedef enum {
-    A_FLAG = 0x04,
-    R_FLAG = 0x02,
-    E_FLAG = 0x01,
+    A_FLAG = 0x01,
+    AR_FLAG = 0x03,
+    E_FLAG = 0x04,
     AE_FLAGS = 0x05,
-    RE_FLAGS = 0x03,
+    ARE_FLAGS = 0x07,
 } ahoi_packet_flags;
 
 typedef struct {
@@ -25,11 +27,6 @@ typedef struct {
     uint8_t pl_size;
     uint8_t* payload;
 } ahoi_packet_t;
-
-typedef enum {
-    PACKET_GEN_OK,
-    PACKET_GEN_KO
-} packet_gen_status;
 
 void store_key(const uint8_t* new_key);
 
