@@ -35,6 +35,8 @@ void store_key(const uint8_t* new_key);
 
 void increment_seq_number();
 
+int open_serial_port(const uint8_t *port, int baudrate);
+
 void print_packet(const ahoi_packet_t *ahoi_packet);
 
 #endif // AHOI_SERIAL_CORE_H
