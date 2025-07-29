@@ -9,6 +9,11 @@
 packet_send_status send_ahoi_packet(int fd, const ahoi_packet_t* ahoi_packet) {
     // TODO: Assign sequence number to ahoi_packet
 
+    if (!ahoi_packet || !ahoi_packet->payload) {
+    fprintf(stderr, "Invalid packet or payload!\n");
+    return PACKET_SEND_KO;
+    }
+    
     uint8_t escaped_packet[2 * MAX_PACKET_SIZE + 4];
     int packet_len = 0;
 
@@ -24,7 +29,7 @@ packet_send_status send_ahoi_packet(int fd, const ahoi_packet_t* ahoi_packet) {
         }
         escaped_packet[packet_len++] = header[i];
     }
-
+    
     // Escape payload
     for (int i = 0; i < ahoi_packet->pl_size; i++) {
         if (ahoi_packet->payload[i] == 0x10) {
