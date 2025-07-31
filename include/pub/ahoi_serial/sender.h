@@ -8,6 +8,6 @@ typedef enum {
     PACKET_SEND_KO
 } packet_send_status;
 
-packet_send_status send_ahoi_packet(int fd, const ahoi_packet_t* ahoi_packet);
+packet_send_status send_ahoi_packet(int fd, ahoi_packet_t* ahoi_packet);
 
 #endif // AHOI_SERIAL_SENDER_H

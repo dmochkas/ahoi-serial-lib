@@ -5,13 +5,15 @@
 
 #include "common_defs.h"
 #include "core.h"
+#include "security.h"
 
-packet_send_status send_ahoi_packet(int fd, const ahoi_packet_t* ahoi_packet) {
-    // TODO: Assign sequence number to ahoi_packet
+packet_send_status send_ahoi_packet(int fd, ahoi_packet_t* ahoi_packet) {
+    ahoi_packet->seq = seq_number;
+    secure_ahoi_packet(ahoi_packet);
 
     if (!ahoi_packet || !ahoi_packet->payload) {
-    fprintf(stderr, "Invalid packet or payload!\n");
-    return PACKET_SEND_KO;
+        fprintf(stderr, "Invalid packet or payload!\n");
+        return PACKET_SEND_KO;
     }
     
     uint8_t escaped_packet[2 * MAX_PACKET_SIZE + 4];

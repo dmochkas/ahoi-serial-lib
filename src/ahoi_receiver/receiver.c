@@ -48,7 +48,9 @@ packet_rcv_status receive_ahoi_packet(const int fd, void (*cb)(const ahoi_packet
             if (byte == 0x10) {
                 if (read(fd, &byte, 1) == 1) {
                     if (byte == 0x03) {
-                        decode_ahoi_packet(recv_buf, buf_pos, &staging_packet);
+                        if (decode_ahoi_packet(recv_buf, buf_pos, &staging_packet) != PACKET_DECODE_OK) {
+                            return PACKET_RCV_KO;
+                        }
                         if (staging_packet.type == AHOI_ACK_TYPE && ack_cb != NULL) {
                             ack_cb(&staging_packet);
                         } else if (cb != NULL) {
