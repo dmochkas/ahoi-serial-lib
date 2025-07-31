@@ -6,11 +6,25 @@ set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
 include(config.cmake)
 include(GitAddSubmodule)
+include(FetchContent)
 
 set(ASCON_LIB_NAME "crypto_aead_${ALG_NAME}_${IMPL_LIST}")
 set(COMMONS_LIB_NAME "ahoi-commons-lib")
 set(SENDER_LIB_NAME "ahoi-sender-objects")
 set(RECEIVER_LIB_NAME "ahoi-receiver-objects")
+set(LOG_LIB_NAME "zlog")
+
+if (NOT TARGET ${LOG_LIB_NAME})
+    FetchContent_Declare(
+            zlog
+            GIT_REPOSITORY https://github.com/HardySimpson/zlog.git
+            GIT_TAG 1.2.18
+    )
+
+    FetchContent_MakeAvailable(zlog)
+
+    target_include_directories(${LOG_LIB_NAME} PUBLIC "${PROJECT_BINARY_DIR}/_deps/zlog-src/src")
+endif ()
 
 add_library(${AHOI_LIB_NAME} STATIC)
 
@@ -30,6 +44,7 @@ if (WITH_RECEIVER)
     target_sources(${AHOI_LIB_NAME} PRIVATE $<TARGET_OBJECTS:${RECEIVER_LIB_NAME}> $<TARGET_OBJECTS:${COMMONS_LIB_NAME}> $<TARGET_OBJECTS:${ASCON_LIB_NAME}>)
 endif ()
 
+target_link_libraries(${AHOI_LIB_NAME} PRIVATE ${LOG_LIB_NAME})
 target_include_directories(${AHOI_LIB_NAME} PUBLIC "${PROJECT_SOURCE_DIR}/include/pub")
 
 if (ENABLE_TESTS)

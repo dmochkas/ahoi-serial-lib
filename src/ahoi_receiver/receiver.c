@@ -58,6 +58,8 @@ packet_rcv_status receive_ahoi_packet(const int fd, void (*cb)(const ahoi_packet
                         packet_received = 1;
                     } else if (byte == 0x10) {
                         recv_buf[buf_pos++] = 0x10;
+                    } else {
+                        // TODO: what if malformed packet
                     }
                 }
             } else {
@@ -76,24 +78,18 @@ packet_decode_status decode_ahoi_packet(const uint8_t *data, const size_t len, a
 
     memcpy(ahoi_packet, data, HEADER_SIZE);
     memcpy(ahoi_packet->payload, data + HEADER_SIZE, ahoi_packet->pl_size);
-    const uint8_t ciphertext_len = ahoi_packet->pl_size - TAG_SIZE;
 
-    if (HEADER_SIZE + ahoi_packet->pl_size > len) {
+    if (ahoi_packet->type == AHOI_ACK_TYPE) {
+        return PACKET_DECODE_OK;
+    }
+
+    const int16_t ciphertext_len = ahoi_packet->pl_size - TAG_SIZE;
+
+    if (ciphertext_len <= 0 || HEADER_SIZE + ahoi_packet->pl_size > len) {
         fprintf(stderr,"Invalid lengths: total=%d, cipher=%d, tag=%d, received=%ld\n",
               ahoi_packet->pl_size, ciphertext_len, TAG_SIZE, len);
         return PACKET_DECODE_KO;
     }
-
-    // printf("=== DEBUG ===\n");
-    // printf("Nonce: ");
-    // for(int i=0; i<NONCE_SIZE; i++) printf("%02X", nonce_buf[i]);
-    // printf("\nAD Header: ");
-    // for(int i=0; i<HEADER_SIZE; i++) printf("%02X", header[i]);
-    // printf("\nCiphertext (%d): ", ciphertext_len);
-    // for(int i=0; i<ciphertext_len; i++) printf("%02X", ciphertext[i]);
-    // printf("\nTag: ");
-    // for(int i=0; i<TAG_SIZE; i++) printf("%02X", tag[i]);
-    // printf("\n=============\n");
 
     if (verify_packet(ahoi_packet) != VERIFY_OK) {
         fprintf(stderr,"Error validating packet\n");
