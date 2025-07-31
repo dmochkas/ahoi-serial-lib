@@ -70,23 +70,12 @@ packet_rcv_status receive_ahoi_packet(const int fd, void (*cb)(const ahoi_packet
                         in_packet = 0;
                         packet_received = 1;
                     } else if (byte == 0x10) {
-
-                        if (buf_pos >= RECV_BUF_SIZE) {
-                            fprintf(stderr, "Buffer overflow\n");
-                            in_packet = 0;
-                            return PACKET_RCV_KO;
-                        }
                         recv_buf[buf_pos++] = 0x10;
                     } else {
                         // TODO: what if malformed packet
                     }
                 }
             } else {
-                if (buf_pos >= RECV_BUF_SIZE) {
-                    fprintf(stderr, "Buffer overflow\n");
-                    in_packet = 0;
-                    return PACKET_RCV_KO;
-                }
                 recv_buf[buf_pos++] = byte;
             }
         }
