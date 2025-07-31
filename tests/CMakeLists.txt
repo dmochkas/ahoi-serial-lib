@@ -19,7 +19,9 @@ add_test(NAME ${SECURITY_TEST_NAME} COMMAND ${SECURITY_TEST_NAME})
 
 set(SEND_RCV_TEST_NAME "send_rcv_test")
 
-add_executable(${SEND_RCV_TEST_NAME} send_rcv_test.c ${PROJECT_SOURCE_DIR}/src/ahoi_sender/sender.c)
+add_executable(${SEND_RCV_TEST_NAME} send_rcv_test.c 
+${PROJECT_SOURCE_DIR}/src/ahoi_sender/sender.c
+${PROJECT_SOURCE_DIR}/src/ahoi_receiver/receiver.c)
 target_link_libraries(${SEND_RCV_TEST_NAME} cmocka ${ASCON_LIB_NAME})
 target_include_directories(${SEND_RCV_TEST_NAME} PRIVATE "${PROJECT_SOURCE_DIR}/include/priv")
 target_include_directories(${SEND_RCV_TEST_NAME} PRIVATE "${PROJECT_SOURCE_DIR}/include/pub/ahoi_serial")

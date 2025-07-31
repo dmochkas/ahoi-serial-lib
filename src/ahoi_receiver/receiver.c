@@ -48,7 +48,20 @@ packet_rcv_status receive_ahoi_packet(const int fd, void (*cb)(const ahoi_packet
             if (byte == 0x10) {
                 if (read(fd, &byte, 1) == 1) {
                     if (byte == 0x03) {
-                        decode_ahoi_packet(recv_buf, buf_pos, &staging_packet);
+
+                        if (buf_pos == 0 || buf_pos > RECV_BUF_SIZE) {
+                            fprintf(stderr, "Invalid packet size\n");
+                            in_packet = 0;
+                            return PACKET_RCV_KO;
+                        }
+
+                        packet_decode_status status = decode_ahoi_packet(recv_buf, buf_pos, &staging_packet);
+                        if (status != PACKET_DECODE_OK) {
+                            fprintf(stderr, "Packet decoding failed\n");
+                            in_packet = 0;
+                            return PACKET_RCV_KO;
+                        }
+
                         if (staging_packet.type == AHOI_ACK_TYPE && ack_cb != NULL) {
                             ack_cb(&staging_packet);
                         } else if (cb != NULL) {
@@ -57,10 +70,21 @@ packet_rcv_status receive_ahoi_packet(const int fd, void (*cb)(const ahoi_packet
                         in_packet = 0;
                         packet_received = 1;
                     } else if (byte == 0x10) {
+
+                        if (buf_pos >= RECV_BUF_SIZE) {
+                            fprintf(stderr, "Buffer overflow\n");
+                            in_packet = 0;
+                            return PACKET_RCV_KO;
+                        }
                         recv_buf[buf_pos++] = 0x10;
                     }
                 }
             } else {
+                if (buf_pos >= RECV_BUF_SIZE) {
+                    fprintf(stderr, "Buffer overflow\n");
+                    in_packet = 0;
+                    return PACKET_RCV_KO;
+                }
                 recv_buf[buf_pos++] = byte;
             }
         }
