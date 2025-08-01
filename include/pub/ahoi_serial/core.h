@@ -2,12 +2,9 @@
 #define AHOI_SERIAL_CORE_H
 
 #include <stdint.h>
+#include <stddef.h>
 
 #define SECONDS_IN_HOUR 3600
-
-#define AHOI_ACK_TYPE 0x7F
-
-extern uint8_t seq_number;
 
 // Solo R flag is not used
 typedef enum {
@@ -28,12 +25,19 @@ typedef struct {
     uint8_t* payload;
 } ahoi_packet_t;
 
+typedef enum {
+    PACKET_DECODE_OK,
+    PACKET_DECODE_KO
+} packet_decode_status;
+
 void store_key(const uint8_t* new_key);
+
+uint8_t get_seq_number();
 
 void increment_seq_number();
 
-int open_serial_port(const uint8_t *port, int baudrate);
-
 void print_packet(const ahoi_packet_t *ahoi_packet);
+
+packet_decode_status decode_ahoi_packet(const uint8_t *data, size_t len, ahoi_packet_t* ahoi_packet);
 
 #endif // AHOI_SERIAL_CORE_H

@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "common_defs.h"
+#include "ahoi_defs.h"
 #include "security.h"
 
 static uint8_t key[KEY_SIZE] = {0};

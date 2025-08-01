@@ -9,9 +9,7 @@ include(GitAddSubmodule)
 include(FetchContent)
 
 set(ASCON_LIB_NAME "crypto_aead_${ALG_NAME}_${IMPL_LIST}")
-set(COMMONS_LIB_NAME "ahoi-commons-lib")
-set(SENDER_LIB_NAME "ahoi-sender-objects")
-set(RECEIVER_LIB_NAME "ahoi-receiver-objects")
+set(AHOI_CORE_LIB_NAME "ahoi-core-lib")
 set(LOG_LIB_NAME "zlog")
 
 if (NOT TARGET ${LOG_LIB_NAME})
@@ -32,18 +30,9 @@ add_git_submodule(DIRECTORY "thirdparty/ascon-c"
         PROPAGATE ON
         PATCHES "patches/ascon-fix.patch"
         CMP_TARGET ${ASCON_LIB_NAME})
-add_subdirectory(src/ahoi_commons)
+add_subdirectory(src/ahoi_core)
 
-if (WITH_SENDER)
-    add_subdirectory(src/ahoi_sender)
-    target_sources(${AHOI_LIB_NAME} PRIVATE $<TARGET_OBJECTS:${SENDER_LIB_NAME}> $<TARGET_OBJECTS:${COMMONS_LIB_NAME}> $<TARGET_OBJECTS:${ASCON_LIB_NAME}>)
-endif ()
-
-if (WITH_RECEIVER)
-    add_subdirectory(src/ahoi_receiver)
-    target_sources(${AHOI_LIB_NAME} PRIVATE $<TARGET_OBJECTS:${RECEIVER_LIB_NAME}> $<TARGET_OBJECTS:${COMMONS_LIB_NAME}> $<TARGET_OBJECTS:${ASCON_LIB_NAME}>)
-endif ()
-
+target_sources(${AHOI_LIB_NAME} PRIVATE $<TARGET_OBJECTS:${AHOI_CORE_LIB_NAME}> $<TARGET_OBJECTS:${ASCON_LIB_NAME}>)
 target_link_libraries(${AHOI_LIB_NAME} PRIVATE ${LOG_LIB_NAME})
 target_include_directories(${AHOI_LIB_NAME} PUBLIC "${PROJECT_SOURCE_DIR}/include/pub")
 

@@ -9,11 +9,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "common_defs.h"
-#include "sender.h"
+#include "ahoi_defs.h"
+#include "com.h"
 #include "core.h"
 #include "security.h"
-#include "receiver.h"
 
 static uint8_t key[KEY_SIZE] = {0};
 

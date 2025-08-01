@@ -1,11 +1,12 @@
 #include "security.h"
+
 #include <time.h>
 #include <string.h>
 #include <stdio.h>
 #include <netinet/ip.h>
 
 #include "ascon.h"
-#include "common_defs.h"
+#include "ahoi_defs.h"
 
 static uint8_t key[KEY_SIZE] = {0};
 static uint8_t ascon_buf[MAX_SECURE_PAYLOAD_SIZE] = {0};
@@ -48,9 +49,7 @@ secure_status secure_ahoi_packet(ahoi_packet_t *ahoi_packet) {
         return SECURE_KO;
     }
 
-    memset(ascon_buf, 0, MAX_SECURE_PAYLOAD_SIZE); //start with zero
-
-    if (generate_nonce(seq_number, nonce_buf, NONCE_SIZE) != NONCE_GEN_OK) {
+    if (generate_nonce(ahoi_packet->seq, nonce_buf, NONCE_SIZE) != NONCE_GEN_OK) {
         fprintf(stderr, "Nonce generation failed!\n");
         return SECURE_KO;
     }
@@ -79,7 +78,7 @@ verify_status verify_packet(ahoi_packet_t *ahoi_packet) {
     const size_t ciphertext_len = (ahoi_packet->pl_size) - TAG_SIZE;
     const uint8_t *tag = ahoi_packet->payload + ciphertext_len;
 
-    if (generate_nonce(seq_number, nonce_buf, NONCE_SIZE) != NONCE_GEN_OK) {
+    if (generate_nonce(ahoi_packet->seq, nonce_buf, NONCE_SIZE) != NONCE_GEN_OK) {
         fprintf(stderr, "Nonce generation failed!\n");
         return VERIFY_KO;
     }
