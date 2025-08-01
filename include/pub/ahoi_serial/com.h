@@ -1,6 +1,8 @@
 #ifndef AHOI_LIB_COM_H
 #define AHOI_LIB_COM_H
 
+#include <sys/time.h>
+
 #include "core.h"
 
 #define RECV_BUF_SIZE 512
@@ -16,7 +18,14 @@ typedef enum {
     PACKET_RCV_KO
 } packet_rcv_status;
 
+typedef struct {
+    struct timeval begin;
+    struct timeval end;
+} timing_t;
+
 int open_serial_port(const uint8_t *port, int baudrate);
+
+void set_timing_cb(void (*cb)(const timing_t*));
 
 packet_send_status send_ahoi_cmd(int fd, const ahoi_packet_t* ahoi_packet, uint8_t* rsp_buf, size_t buf_len, size_t* rsp_len);
 

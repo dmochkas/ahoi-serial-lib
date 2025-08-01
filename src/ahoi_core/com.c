@@ -6,17 +6,21 @@
 #include <poll.h>
 #include <fcntl.h>
 #include <termios.h>
+#include <stdbool.h>
 
 #include "ahoi_defs.h"
 #include "security.h"
 
-#define AHOI_SERIAL_ACK_TIMEOUT_MS 100
+#define AHOI_SERIAL_RESP_TIMEOUT_MS 100
 
 static uint8_t send_buf[2 * MAX_PACKET_SIZE + 4];
 static uint8_t payload_buf[MAX_PAYLOAD_SIZE] = {0};
 static ahoi_packet_t ahoi_packet_internal = {
     .payload = payload_buf
 };
+static timing_t timing = {0};
+static bool timing_init = false;
+static void (*timing_cb)(const timing_t*) = NULL;
 
 /* Private functions */
 
@@ -78,6 +82,10 @@ int open_serial_port(const uint8_t *port, int baudrate) {
     return fd;
 }
 
+void set_timing_cb(void (*cb)(const timing_t*)) {
+    timing_cb = cb;
+}
+
 packet_send_status send_ahoi_cmd(int fd, const ahoi_packet_t* ahoi_packet, uint8_t* rsp_buf, const size_t buf_len, size_t* rsp_len) {
     if (!ahoi_packet || !ahoi_packet->payload) {
         fprintf(stderr, "Invalid packet or payload!\n");
@@ -101,8 +109,8 @@ packet_send_status send_ahoi_cmd(int fd, const ahoi_packet_t* ahoi_packet, uint8
         return PACKET_SEND_KO;
     }
 
-    if (receive_ahoi_packet_sync(fd, &ahoi_packet_internal, AHOI_SERIAL_ACK_TIMEOUT_MS) != PACKET_RCV_OK) {
-        fprintf(stderr, "Error receiving send ack\n");
+    if (receive_ahoi_packet_sync(fd, &ahoi_packet_internal, AHOI_SERIAL_RESP_TIMEOUT_MS) != PACKET_RCV_OK) {
+        fprintf(stderr, "Error receiving cmd response\n");
         return PACKET_SEND_KO;
     }
 
@@ -136,9 +144,12 @@ packet_send_status send_ahoi_data(int fd, ahoi_packet_t* ahoi_packet) {
     ahoi_packet->seq = get_seq_number();
     secure_ahoi_packet(ahoi_packet);
 
-    // TODO: make a macro
     const size_t len = ahoi_serialize(ahoi_packet, send_buf);
 
+    if (timing_cb != NULL && ahoi_packet->type == A_FLAG) {
+        gettimeofday(&timing.begin, NULL);
+        timing_init = true;
+    }
     const ssize_t bytes_written = write(fd, send_buf, len);
     if (bytes_written < 0) {
         fprintf(stderr, "Error writing to serial port\n")   ;
@@ -149,7 +160,7 @@ packet_send_status send_ahoi_data(int fd, ahoi_packet_t* ahoi_packet) {
         return PACKET_SEND_KO;
     }
 
-    if (receive_ahoi_packet_sync(fd, &ahoi_packet_internal, AHOI_SERIAL_ACK_TIMEOUT_MS) != PACKET_RCV_OK) {
+    if (receive_ahoi_packet_sync(fd, &ahoi_packet_internal, AHOI_SERIAL_RESP_TIMEOUT_MS) != PACKET_RCV_OK) {
         fprintf(stderr, "Error receiving send ack\n");
         return PACKET_SEND_KO;
     }
@@ -210,6 +221,11 @@ packet_rcv_status receive_ahoi_packet_sync(const int fd, ahoi_packet_t* p, int t
                             fprintf(stderr, "Packet decoding failed\n");
                             in_packet = 0;
                             return PACKET_RCV_KO;
+                        }
+                        if (timing_init && is_ack(p)) {
+                            gettimeofday(&timing.end, NULL);
+                            timing_cb(&timing);
+                            timing_init = false;
                         }
                         in_packet = 0;
                         packet_received = 1;
