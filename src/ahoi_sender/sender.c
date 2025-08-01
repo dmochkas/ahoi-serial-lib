@@ -8,7 +8,18 @@
 #include "security.h"
 
 packet_send_status send_ahoi_packet(int fd, ahoi_packet_t* ahoi_packet) {
+    
+    if (ahoi_packet -> pl_size > MAX_SECURE_PAYLOAD_SIZE - TAG_SIZE) {
+        fprintf(stderr, "Payload too large to accommodate tag!\n");
+        return PACKET_SEND_KO;  // Fail before modify something
+    }
+
     ahoi_packet->seq = seq_number;
+
+    if (secure_ahoi_packet(ahoi_packet) != SECURE_OK) {
+        return PACKET_SEND_KO;
+    }
+    
     secure_ahoi_packet(ahoi_packet);
 
     if (!ahoi_packet || !ahoi_packet->payload) {

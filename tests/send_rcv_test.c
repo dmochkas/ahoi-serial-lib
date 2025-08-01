@@ -71,27 +71,33 @@ static void send_ahoi_packet_null_payload_test(void **state) {
     close(pipefd[1]);
 }
 
-static void secure_ahoi_packet_overflow_test(void **state) {
+static void send_ahoi_packet_secure_overflow_test(void **state) {
     (void) state;
+
+    int pipefd[2];
+    assert_int_equal(pipe(pipefd), 0);  // Pipe
 
     ahoi_packet_t packet = {0};
     packet.src = 0x01;
     packet.dst = 0x02;
     packet.flags = 0x00;
-    
-    // Configuramos un tamaño de payload que causaría overflow al agregar el TAG
-    packet.pl_size = MAX_SECURE_PAYLOAD_SIZE - TAG_SIZE + 1;  // Excede el límite
 
-    // Asignamos exactamente el tamaño que dice pl_size (sin espacio extra para el TAG)
+    // we configure the size of pyload to generate overflow
+    packet.pl_size = MAX_SECURE_PAYLOAD_SIZE - TAG_SIZE + 1;
+
+    // size without space for TAG
     uint8_t *tight_payload = malloc(packet.pl_size);
     assert_non_null(tight_payload);
     packet.payload = tight_payload;
 
-    // Llamamos directamente a secure_ahoi_packet (no necesitamos send_ahoi_packet)
-    secure_status status = secure_ahoi_packet(&packet);
-    assert_int_equal(status, SECURE_KO);
+    packet_send_status status = send_ahoi_packet(pipefd[1], &packet);
+    
+    // Verify the function
+    assert_int_equal(status, PACKET_SEND_KO);
 
     free(tight_payload);
+    close(pipefd[0]);
+    close(pipefd[1]);
 }
 
 
@@ -349,7 +355,7 @@ int main(void) {
     const struct CMUnitTest tests[] = {
         cmocka_unit_test(send_ahoi_packet_test),
         cmocka_unit_test(send_ahoi_packet_null_payload_test),
-        cmocka_unit_test(secure_ahoi_packet_overflow_test),
+        cmocka_unit_test(send_ahoi_packet_secure_overflow_test),
         cmocka_unit_test(test_decode_ahoi_packet_valid),
         cmocka_unit_test(decode_ahoi_packet_too_short_test),
         cmocka_unit_test(test_decode_ahoi_packet_invalid_tag),
