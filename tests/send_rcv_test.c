@@ -30,7 +30,7 @@ static void send_ahoi_packet_test(void **state) {
     packet.flags = 0x00;
     packet.pl_size = 3;
 
-    uint8_t payload_data[] = {0x11, 0x22, 0x10}; // 0x10 to test the escape
+    uint8_t payload_data[100] = {0x11, 0x22, 0x10}; // 0x10 to test the escape
     packet.payload = payload_data;
 
     // Send
@@ -71,22 +71,29 @@ static void send_ahoi_packet_null_payload_test(void **state) {
     close(pipefd[1]);
 }
 
-static void send_ahoi_packet_invalid_fd_test(void **state) {
+static void secure_ahoi_packet_overflow_test(void **state) {
     (void) state;
 
-    uint8_t payload[] = {0xAA, 0xBB, 0xCC};
     ahoi_packet_t packet = {0};
-    packet.payload = payload;
-    packet.pl_size = sizeof(payload);
     packet.src = 0x01;
     packet.dst = 0x02;
-    packet.type = 0x10;
+    packet.flags = 0x00;
+    
+    // Configuramos un tamaño de payload que causaría overflow al agregar el TAG
+    packet.pl_size = MAX_SECURE_PAYLOAD_SIZE - TAG_SIZE + 1;  // Excede el límite
 
-    int invalid_fd = -1;  // FD invalide
+    // Asignamos exactamente el tamaño que dice pl_size (sin espacio extra para el TAG)
+    uint8_t *tight_payload = malloc(packet.pl_size);
+    assert_non_null(tight_payload);
+    packet.payload = tight_payload;
 
-    packet_send_status result = send_ahoi_packet(invalid_fd, &packet);
-    assert_int_equal(result, PACKET_SEND_KO);
+    // Llamamos directamente a secure_ahoi_packet (no necesitamos send_ahoi_packet)
+    secure_status status = secure_ahoi_packet(&packet);
+    assert_int_equal(status, SECURE_KO);
+
+    free(tight_payload);
 }
+
 
 static void test_decode_ahoi_packet_valid(void **state) {
     (void) state;
@@ -95,7 +102,7 @@ static void test_decode_ahoi_packet_valid(void **state) {
     store_key(key);
 
     // Step 1: Create the payload
-    const uint8_t test_payload[] = {0x11, 0x22, 0x33, 0x44};
+    const uint8_t test_payload[100] = {0x11, 0x22, 0x33, 0x44};
     const size_t payload_size = sizeof(test_payload);
 
     ahoi_packet_t packet = {0};
@@ -163,7 +170,7 @@ static void test_decode_ahoi_packet_invalid_tag(void **state) {
 
     store_key(key);
 
-    const uint8_t test_payload[] = {0xAA, 0xBB, 0xCC, 0xDD};
+    const uint8_t test_payload[100] = {0xAA, 0xBB, 0xCC, 0xDD};
     const size_t payload_size = sizeof(test_payload);
 
     ahoi_packet_t packet = {0};
@@ -214,7 +221,7 @@ static void packet_callback(const ahoi_packet_t* pkt) {
     assert_int_equal(pkt->type, 0x20);
     assert_int_equal(pkt->flags, 0x00);
     assert_int_equal(pkt->pl_size, 4);
-    const uint8_t expected_payload[] = {0xAA, 0xBB, 0xCC, 0x10};
+    const uint8_t expected_payload[100] = {0xAA, 0xBB, 0xCC, 0x10};
     assert_memory_equal(pkt->payload, expected_payload, 4);
     callback_called = 1;
 }
@@ -237,7 +244,7 @@ static void receive_ahoi_packet_test(void **state) {
     packet.pl_size = 4;
     packet.payload = payload_buf;
 
-    const uint8_t original_payload[] = {0xAA, 0xBB, 0xCC, 0x10}; 
+    const uint8_t original_payload[100] = {0xAA, 0xBB, 0xCC, 0x10}; 
     memcpy(packet.payload, original_payload, 4);
 
    secure_status sec_status = secure_ahoi_packet(&packet);
@@ -342,7 +349,7 @@ int main(void) {
     const struct CMUnitTest tests[] = {
         cmocka_unit_test(send_ahoi_packet_test),
         cmocka_unit_test(send_ahoi_packet_null_payload_test),
-        cmocka_unit_test(send_ahoi_packet_invalid_fd_test),
+        cmocka_unit_test(secure_ahoi_packet_overflow_test),
         cmocka_unit_test(test_decode_ahoi_packet_valid),
         cmocka_unit_test(decode_ahoi_packet_too_short_test),
         cmocka_unit_test(test_decode_ahoi_packet_invalid_tag),

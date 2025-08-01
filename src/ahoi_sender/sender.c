@@ -17,7 +17,7 @@ packet_send_status send_ahoi_packet(int fd, ahoi_packet_t* ahoi_packet) {
     }
     
     uint8_t escaped_packet[2 * MAX_PACKET_SIZE + 4];
-    int packet_len = 0;
+    int packet_len = 0;    
 
     // Framing: DLE-STX
     escaped_packet[packet_len++] = 0x10;
