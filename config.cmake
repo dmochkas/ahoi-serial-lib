@@ -7,9 +7,8 @@ set(IMPL_LIST ${IMPL_NAME} CACHE STRING "")
 set(TEST_LIST "" CACHE STRING "")
 
 # App config
-option(WITH_SENDER "Build sender" ON)
-option(WITH_RECEIVER "Build receiver" ON)
 option(ENABLE_TESTS "Enable testing" OFF)
 option(WITH_TIMING "R-Ack doesn't work. To calculate RTT from OS" ON)
+option(SECURE_MODE "Enable Ascon AEAD" ON)
 
 set(AHOI_LIB_NAME "ahoi-serial-lib" CACHE STRING "Library name")

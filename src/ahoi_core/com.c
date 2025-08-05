@@ -142,7 +142,10 @@ packet_send_status send_ahoi_data(int fd, ahoi_packet_t* ahoi_packet) {
     }
 
     ahoi_packet->seq = get_seq_number();
+
+#if SECURE_MODE == 1
     secure_ahoi_packet(ahoi_packet);
+#endif
 
     const size_t len = ahoi_serialize(ahoi_packet, send_buf);
 
@@ -235,7 +238,7 @@ packet_rcv_status receive_ahoi_packet_sync(const int fd, ahoi_packet_t* p, ahoi_
                                 //     zlog_warn(error_cat, "Malformed timing");
                                 // }
 
-                                const int32_t est_delay = (int32_t) (end - begin - AHOI_RANGE_DELAY) / 2;
+                                const int32_t est_delay = (int32_t) ((end - begin) - AHOI_RANGE_DELAY) / 2;
                                 const int32_t est_delay_valid = htonl(est_delay > 0 ? est_delay : 0);
                                 const uint8_t* ack_pl = &est_delay_valid;
                                 p->pl_size = sizeof(int32_t);

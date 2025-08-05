@@ -76,6 +76,7 @@ packet_decode_status decode_ahoi_packet(const uint8_t *data, const size_t len, a
         return PACKET_DECODE_OK;
     }
 
+#if SECURE_MODE == 1
     const int16_t ciphertext_len = ahoi_packet->pl_size - TAG_SIZE;
 
     if (ciphertext_len <= 0) {
@@ -87,6 +88,7 @@ packet_decode_status decode_ahoi_packet(const uint8_t *data, const size_t len, a
         fprintf(stderr,"Error validating packet\n");
         return PACKET_DECODE_KO;
     }
+#endif
 
     seq_number = ahoi_packet->seq;
     return PACKET_DECODE_OK;
