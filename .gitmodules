@@ -1,0 +1,6 @@
+[submodule "thirdparty/ascon-c"]
+	path = thirdparty/ascon-c
+	url = https://github.com/ascon/ascon-c.git
+[submodule "thirdparty/cmocka"]
+	path = thirdparty/cmocka
+	url = https://gitlab.com/cmocka/cmocka.git
