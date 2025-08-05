@@ -44,7 +44,7 @@ void print_packet(const ahoi_packet_t *ahoi_packet) {
     }
 }
 
-packet_decode_status decode_ahoi_packet(const uint8_t *data, const size_t len, ahoi_packet_t* ahoi_packet) {
+packet_decode_status decode_ahoi_packet(const uint8_t *data, const size_t len, ahoi_packet_t* ahoi_packet, ahoi_footer_t* ahoi_footer) {
     if (len < HEADER_SIZE) {
         fprintf(stderr,"Packet too short\n");
         return PACKET_DECODE_KO;
@@ -52,8 +52,24 @@ packet_decode_status decode_ahoi_packet(const uint8_t *data, const size_t len, a
 
     memcpy(ahoi_packet, data, HEADER_SIZE);
 
+    if (HEADER_SIZE + ahoi_packet->pl_size > len) {
+        fprintf(stderr,"Invalid payload size: expected=%d, received=%ld\n",
+              ahoi_packet->pl_size, len - HEADER_SIZE);
+        return PACKET_DECODE_KO;
+    }
+
     if (ahoi_packet->pl_size) {
         memcpy(ahoi_packet->payload, data + HEADER_SIZE, ahoi_packet->pl_size);
+    }
+
+    if (is_footer_carrier(ahoi_packet)) {
+        if (HEADER_SIZE + ahoi_packet->pl_size + FOOTER_SIZE > len) {
+            fprintf(stderr,"Error extracting footer: expected_size=%d, received_size=%ld\n",
+                  HEADER_SIZE + ahoi_packet->pl_size + FOOTER_SIZE, len);
+            return PACKET_DECODE_KO;
+        }
+
+        memcpy(ahoi_footer, data + HEADER_SIZE + ahoi_packet->pl_size, FOOTER_SIZE);
     }
 
     if (!is_data_packet(ahoi_packet)) {
@@ -62,9 +78,8 @@ packet_decode_status decode_ahoi_packet(const uint8_t *data, const size_t len, a
 
     const int16_t ciphertext_len = ahoi_packet->pl_size - TAG_SIZE;
 
-    if (ciphertext_len <= 0 || HEADER_SIZE + ahoi_packet->pl_size > len) {
-        fprintf(stderr,"Invalid lengths: total=%d, cipher=%d, tag=%d, received=%ld\n",
-              ahoi_packet->pl_size, ciphertext_len, TAG_SIZE, len);
+    if (ciphertext_len <= 0) {
+        fprintf(stderr,"Impossible to extract a tag from the payload len %d", ahoi_packet->pl_size);
         return PACKET_DECODE_KO;
     }
 

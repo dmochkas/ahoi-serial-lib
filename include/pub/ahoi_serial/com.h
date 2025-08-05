@@ -25,12 +25,10 @@ typedef struct {
 
 int open_serial_port(const uint8_t *port, int baudrate);
 
-void set_timing_cb(void (*cb)(const timing_t*));
-
 packet_send_status send_ahoi_cmd(int fd, const ahoi_packet_t* ahoi_packet, uint8_t* rsp_buf, size_t buf_len, size_t* rsp_len);
 
 packet_send_status send_ahoi_data(int fd, ahoi_packet_t* ahoi_packet);
 
-packet_rcv_status receive_ahoi_packet_sync(int fd, ahoi_packet_t* p, int timeout_ms);
+packet_rcv_status receive_ahoi_packet_sync(int fd, ahoi_packet_t* p, ahoi_footer_t* f, int timeout_ms);
 
 #endif // AHOI_LIB_COM_H

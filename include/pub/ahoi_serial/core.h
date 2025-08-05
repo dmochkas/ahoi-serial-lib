@@ -25,6 +25,15 @@ typedef struct {
     uint8_t* payload;
 } ahoi_packet_t;
 
+typedef struct {
+    uint8_t power;
+    uint8_t rssi;
+    uint8_t biterrors;
+    uint8_t agcMean;
+    uint8_t agcMin;
+    uint8_t agcMax;
+} ahoi_footer_t;
+
 typedef enum {
     PACKET_DECODE_OK,
     PACKET_DECODE_KO
@@ -38,6 +47,6 @@ void increment_seq_number();
 
 void print_packet(const ahoi_packet_t *ahoi_packet);
 
-packet_decode_status decode_ahoi_packet(const uint8_t *data, size_t len, ahoi_packet_t* ahoi_packet);
+packet_decode_status decode_ahoi_packet(const uint8_t *data, const size_t len, ahoi_packet_t* ahoi_packet, ahoi_footer_t* ahoi_footer);
 
 #endif // AHOI_SERIAL_CORE_H
