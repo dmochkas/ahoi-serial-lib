@@ -11,6 +11,8 @@
 
 #include "ahoi_defs.h"
 #include "security.h"
+#include <zlog.h>
+extern zlog_category_t *zc;
 
 #define AHOI_SERIAL_RESP_TIMEOUT_MS 100
 
@@ -64,7 +66,7 @@ size_t ahoi_serialize(const ahoi_packet_t* p, uint8_t* buf) {
 int open_serial_port(const uint8_t *port, int baudrate) {
     int fd = open(port, O_RDWR | O_NOCTTY | O_NDELAY);
     if (fd == -1) {
-        perror("Error opening serial port");
+        zlog_error(zc, "Error opening serial port");
         return -1;
     }
 
@@ -88,12 +90,12 @@ int open_serial_port(const uint8_t *port, int baudrate) {
 
 packet_send_status send_ahoi_cmd(int fd, const ahoi_packet_t* ahoi_packet, uint8_t* rsp_buf, const size_t buf_len, size_t* rsp_len) {
     if (!ahoi_packet || !ahoi_packet->payload) {
-        fprintf(stderr, "Invalid packet or payload!\n");
+        zlog_error(zc, "Invalid packet or payload!\n");
         return PACKET_SEND_KO;
     }
 
     if (!is_command_packet(ahoi_packet)) {
-        fprintf(stderr, "Expecting ahoi command packet\n");
+        zlog_error(zc, "Expecting ahoi command packet\n");
         return PACKET_SEND_KO;
     }
 
@@ -101,27 +103,27 @@ packet_send_status send_ahoi_cmd(int fd, const ahoi_packet_t* ahoi_packet, uint8
 
     const ssize_t bytes_written = write(fd, send_buf, len);
     if (bytes_written < 0) {
-        fprintf(stderr, "Error writing to serial port\n");
+        zlog_error(zc, "Error writing to serial port\n");
         return PACKET_SEND_KO;
     }
     if (bytes_written != len) {
-        fprintf(stderr, "Warning: Partial write (%zd of %lu bytes)\n", bytes_written, len);
+        zlog_error(zc, "Warning: Partial write (%zd of %lu bytes)\n", bytes_written, len);
         return PACKET_SEND_KO;
     }
 
     if (receive_ahoi_packet_sync(fd, &ahoi_packet_internal, NULL, AHOI_SERIAL_RESP_TIMEOUT_MS) != PACKET_RCV_OK) {
-        fprintf(stderr, "Error receiving cmd response\n");
+        zlog_error(zc, "Error receiving cmd response\n");
         return PACKET_SEND_KO;
     }
 
     if (is_serial_nack(&ahoi_packet_internal)) {
-        fprintf(stderr, "Ahoi cmd is malformed\n");
+        zlog_error(zc, "Ahoi cmd is malformed\n");
         return PACKET_SEND_KO;
     }
 
     if (rsp_buf != NULL) {
         if (buf_len < ahoi_packet_internal.pl_size) {
-            fprintf(stderr, "Response buffer is too small\n");
+            zlog_error(zc, "Response buffer is too small\n");
             return PACKET_SEND_KO;
         }
         memcpy(rsp_buf, ahoi_packet_internal.payload, ahoi_packet_internal.pl_size);
@@ -132,12 +134,12 @@ packet_send_status send_ahoi_cmd(int fd, const ahoi_packet_t* ahoi_packet, uint8
 
 packet_send_status send_ahoi_data(int fd, ahoi_packet_t* ahoi_packet) {
     if (!ahoi_packet || !ahoi_packet->payload) {
-        fprintf(stderr, "Invalid packet or payload!\n");
+        zlog_error(zc, "Invalid packet or payload!\n");
         return PACKET_SEND_KO;
     }
 
     if (!is_data_packet(ahoi_packet)) {
-        fprintf(stderr, "Expecting ahoi data packet\n");
+        zlog_error(zc, "Expecting ahoi data packet\n");
         return PACKET_SEND_KO;
     }
 
@@ -157,21 +159,21 @@ packet_send_status send_ahoi_data(int fd, ahoi_packet_t* ahoi_packet) {
 #endif
     const ssize_t bytes_written = write(fd, send_buf, len);
     if (bytes_written < 0) {
-        fprintf(stderr, "Error writing to serial port\n")   ;
+        zlog_error(zc, "Error writing to serial port\n")   ;
         return PACKET_SEND_KO;
     }
     if (bytes_written != len) {
-        fprintf(stderr, "Warning: Partial write (%zd of %lu bytes)\n", bytes_written, len);
+        zlog_error(zc, "Warning: Partial write (%zd of %lu bytes)\n", bytes_written, len);
         return PACKET_SEND_KO;
     }
 
     if (receive_ahoi_packet_sync(fd, &ahoi_packet_internal, NULL, AHOI_SERIAL_RESP_TIMEOUT_MS) != PACKET_RCV_OK) {
-        fprintf(stderr, "Error receiving send ack\n");
+        zlog_error(zc, "Error receiving send ack\n");
         return PACKET_SEND_KO;
     }
 
     if (!is_serial_ack(&ahoi_packet_internal)) {
-        fprintf(stderr, "Unexpected response from modem\n");
+        zlog_error(zc, "Unexpected response from modem\n");
         return PACKET_SEND_KO;
     }
 
@@ -194,10 +196,11 @@ packet_rcv_status receive_ahoi_packet_sync(const int fd, ahoi_packet_t* p, ahoi_
     while (!packet_received) {
         retval = poll(&pfd, 1, timeout_ms);
         if (retval == -1) {
-            fprintf(stderr,"Poll error\n");
+            zlog_error(zc,"Poll error\n");
             return PACKET_RCV_KO;
         }
         if (retval == 0) {
+            zlog_error(zc,"timeout");
             return PACKET_RCV_TIMEOUT;
         }
         if (!(pfd.revents & POLLIN)) {
@@ -216,14 +219,14 @@ packet_rcv_status receive_ahoi_packet_sync(const int fd, ahoi_packet_t* p, ahoi_
                 if (read(fd, &byte, 1) == 1) {
                     if (byte == 0x03) {
                         if (buf_pos == 0 || buf_pos > RECV_BUF_SIZE) {
-                            fprintf(stderr, "Invalid packet size\n");
+                            zlog_error(zc, "Invalid packet size\n");
                             in_packet = 0;
                             return PACKET_RCV_KO;
                         }
 
                         const packet_decode_status status = decode_ahoi_packet(recv_buf, buf_pos, p, f);
                         if (status != PACKET_DECODE_OK) {
-                            fprintf(stderr, "Packet decoding failed\n");
+                            zlog_error(zc, "Packet decoding failed\n");
                             in_packet = 0;
                             return PACKET_RCV_KO;
                         }
@@ -235,7 +238,7 @@ packet_rcv_status receive_ahoi_packet_sync(const int fd, ahoi_packet_t* p, ahoi_
                                 const uint64_t end = (uint64_t) timing.end.tv_sec * 1000000 + timing.end.tv_usec;
 
                                 // if (end < begin) {
-                                //     zlog_warn(error_cat, "Malformed timing");
+                                //   zlog_warn(error_cat, "Malformed timing");
                                 // }
 
                                 const int32_t est_delay = (int32_t) ((end - begin) - AHOI_RANGE_DELAY) / 2;

@@ -7,6 +7,8 @@
 
 #include "ascon.h"
 #include "ahoi_defs.h"
+#include <zlog.h>
+extern zlog_category_t *zc;
 
 static uint8_t key[KEY_SIZE] = {0};
 static uint8_t ascon_buf[MAX_SECURE_PAYLOAD_SIZE] = {0};
@@ -40,17 +42,17 @@ secure_status secure_ahoi_packet(ahoi_packet_t *ahoi_packet) {
 
     // NULL check
     if (!ahoi_packet || !ahoi_packet->payload) {
-        fprintf(stderr, "Invalid packet or payload!\n");
+        zlog_error(zc, "Invalid packet or payload!\n");
         return SECURE_KO;
     }
 
     if (pl_size + TAG_SIZE > MAX_SECURE_PAYLOAD_SIZE) {
-        fprintf(stderr, "There is not space in the buffer");
+        zlog_error(zc, "There is not space in the buffer");
         return SECURE_KO;
     }
 
     if (generate_nonce(ahoi_packet->seq, nonce_buf, NONCE_SIZE) != NONCE_GEN_OK) {
-        fprintf(stderr, "Nonce generation failed!\n");
+        zlog_error(zc, "Nonce generation failed!\n");
         return SECURE_KO;
     }
 
@@ -64,7 +66,7 @@ secure_status secure_ahoi_packet(ahoi_packet_t *ahoi_packet) {
     );
 
     if (enc_result != 0) {
-        fprintf(stderr, "Packet encryption failed!\n");
+        zlog_error(zc, "Packet encryption failed!\n");
         return SECURE_KO;
     }
 
@@ -79,11 +81,11 @@ verify_status verify_packet(ahoi_packet_t *ahoi_packet) {
     const uint8_t *tag = ahoi_packet->payload + ciphertext_len;
 
     if (generate_nonce(ahoi_packet->seq, nonce_buf, NONCE_SIZE) != NONCE_GEN_OK) {
-        fprintf(stderr, "Nonce generation failed!\n");
+        zlog_error(zc, "Nonce generation failed!\n");
         return VERIFY_KO;
     }
     if (ciphertext_len > MAX_SECURE_PAYLOAD_SIZE) {
-        fprintf(stderr, "There is not space in the buffer");
+        zlog_error(zc, "There is not space in the buffer");
         return VERIFY_KO;
     }
 
@@ -95,7 +97,7 @@ verify_status verify_packet(ahoi_packet_t *ahoi_packet) {
     );
 
     if (dec_result != 0) {
-        fprintf(stderr, "Decryption failed.\n");
+        zlog_error(zc, "Decryption failed.\n");
         return VERIFY_KO;
     }
 
