@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <string.h>
 
-
 #include "ahoi_defs.h"
 #include "security.h"
 

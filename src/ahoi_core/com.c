@@ -14,8 +14,8 @@
 
 #define AHOI_SERIAL_RESP_TIMEOUT_MS 100
 
-// Empirical value
-#define AHOI_RANGE_DELAY (26 * 1000000 / (double) 15)
+// Empirical value for 20 bytes payload
+#define AHOI_RANGE_DELAY (931 * 10000 * 2 / (double) 15)
 
 static uint8_t send_buf[2 * MAX_PACKET_SIZE + 4];
 static uint8_t payload_buf[MAX_PAYLOAD_SIZE] = {0};
