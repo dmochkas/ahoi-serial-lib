@@ -6,13 +6,13 @@
 
 #define SECONDS_IN_HOUR 3600
 
-// Solo R flag is not used
+// A and R flags are incompatible
 typedef enum {
     A_FLAG = 0x01,
-    AR_FLAG = 0x03,
+    R_FLAG = 0x02,
     E_FLAG = 0x04,
     AE_FLAGS = 0x05,
-    ARE_FLAGS = 0x07,
+    RE_FLAGS = 0x06,
 } ahoi_packet_flags;
 
 typedef struct {
@@ -39,7 +39,9 @@ typedef enum {
     PACKET_DECODE_KO
 } packet_decode_status;
 
+#if SECURE_MODE == 1
 void store_key(const uint8_t* new_key);
+#endif
 
 uint8_t get_seq_number();
 

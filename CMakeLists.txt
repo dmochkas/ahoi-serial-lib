@@ -44,5 +44,5 @@ if (ENABLE_TESTS)
                           PROPAGATE ON
                           CMP_TARGET "cmocka")
     endif ()
-#    add_subdirectory(tests)
+    add_subdirectory(tests)
 endif ()
