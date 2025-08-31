@@ -8,9 +8,11 @@
 
 static uint8_t seq_number = 0;
 
+#if SECURE_MODE == 1
 void store_key(const uint8_t* new_key) {
     sec_store_key(new_key);
 }
+#endif
 
 uint8_t get_seq_number() {
     return seq_number;
