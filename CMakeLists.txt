@@ -8,7 +8,7 @@ include(config.cmake)
 include(GitAddSubmodule)
 include(FetchContent)
 
-set(ASCON_LIB_NAME "crypto_aead_${ALG_NAME}_${IMPL_LIST}")
+set(ASCON_LIB_NAME "ascon-c::ascon-c")
 set(AHOI_CORE_LIB_NAME "ahoi-core-lib")
 set(LOG_LIB_NAME "zlog")
 
@@ -26,23 +26,29 @@ endif ()
 
 add_library(${AHOI_LIB_NAME} STATIC)
 
-add_git_submodule(DIRECTORY "thirdparty/ascon-c"
-        PROPAGATE ON
-        PATCHES "patches/ascon-fix.patch"
-        CMP_TARGET ${ASCON_LIB_NAME})
+#add_git_submodule(DIRECTORY "thirdparty/ascon-c"
+#        PROPAGATE ON
+#        PATCHES "patches/ascon-fix.patch"
+#        CMP_TARGET ${ASCON_LIB_NAME})
+
+find_package(ascon-c REQUIRED)
+
 add_subdirectory(src/ahoi_core)
 
-target_sources(${AHOI_LIB_NAME} PRIVATE $<TARGET_OBJECTS:${AHOI_CORE_LIB_NAME}> $<TARGET_OBJECTS:${ASCON_LIB_NAME}>)
-target_link_libraries(${AHOI_LIB_NAME} PRIVATE ${LOG_LIB_NAME})
+target_sources(${AHOI_LIB_NAME} PRIVATE $<TARGET_OBJECTS:${AHOI_CORE_LIB_NAME}>)
+target_link_libraries(${AHOI_LIB_NAME} PRIVATE ${LOG_LIB_NAME} ${ASCON_LIB_NAME})
 target_include_directories(${AHOI_LIB_NAME} PUBLIC "${PROJECT_SOURCE_DIR}/include/pub")
 
 if (ENABLE_TESTS)
+    find_package(cmocka REQUIRED)
+    set(CMOCKA_LIB_TARGET "cmocka::cmocka")
+
     enable_testing()
     option(WITH_EXAMPLES "" OFF)
-    if(NOT TARGET cmocka)
-        add_git_submodule(DIRECTORY "thirdparty/cmocka"
-                          PROPAGATE ON
-                          CMP_TARGET "cmocka")
-    endif ()
+#    if(NOT TARGET cmocka)
+#        add_git_submodule(DIRECTORY "thirdparty/cmocka"
+#                          PROPAGATE ON
+#                          CMP_TARGET "cmocka")
+#    endif ()
     add_subdirectory(tests)
 endif ()

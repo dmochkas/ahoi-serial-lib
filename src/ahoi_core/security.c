@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <netinet/ip.h>
 
-#include "ascon.h"
+#include "asconaead128/ascon.h"
 #include "ahoi_defs.h"
 
 static uint8_t key[KEY_SIZE] = {0};
