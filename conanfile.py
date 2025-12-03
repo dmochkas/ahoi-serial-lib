@@ -60,7 +60,7 @@ class AhoiSerialLibConan(ConanFile):
             self.options.rm_safe("fPIC")
 
     def requirements(self):
-        self.requires(self.ascon_lib)
+        self.requires(self.ascon_lib, options={"shared": self.options.shared})
 
         if self.options.enable_tests:
             self.requires(self.cmocka_lib)
@@ -101,12 +101,11 @@ class AhoiSerialLibConan(ConanFile):
             copy(self, "LICENSE", dst="licenses", src=os.path.dirname(zlog_license), keep_path=False)
 
         # Public headers
-        copy(self, "*.h", dst="include", src=os.path.join("include", "pub"))
+        copy(self, "*.h", dst=os.path.join(self.package_folder, "include"), src=os.path.join(self.source_folder, "include", "pub"))
 
         # Libraries
-        lib_dst = os.path.join(self.package_folder, "lib")
         for pattern in ("*.a", "*.lib", "*.so", "*.dylib", "*.dll"):
-            copy(self, pattern, dst=lib_dst, src=self.build_folder, keep_path=False)
+            copy(self, pattern, dst=os.path.join(self.package_folder, "lib"), src=self.build_folder, keep_path=False)
     def package_info(self):
         self.cpp_info.libs = collect_libs(self)
         # Consumer compile definitions reflecting build configuration
