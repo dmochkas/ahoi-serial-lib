@@ -33,7 +33,6 @@ int teardown_socketpair(void **state) {
 
     close(sv[0]);
     close(sv[1]);
-
     return 0;
 }
 
@@ -46,11 +45,20 @@ static void send_ahoi_packet_test(void **state) {
     packet.src = 0x01;
     packet.dst = 0x02;
     packet.flags = 0x00;
-    packet.pl_size = 3;
+    #if 0  
+       // ORIGINAL PAYLOAD (disabled)
+	packet.pl_size=3;
+	uint8_t payload_data[100]= {0x11, 0x22, 0x10};
+	packet.payload = payload_data; 
+    #else 
+	// NEW DUMMY SENSOR PAYLOAD 
+	uint8_t payload_data[1]= {0};
+	size_t pl_size = build_dummy_payload(payload_data, sizeof(payload_data));
+	assert_int_equal(1,pl_size); 
 
-    uint8_t payload_data[100] = {0x11, 0x22, 0x10};
-    packet.payload = payload_data;
-
+	packet.pl_size = (uint8_t)pl_size;
+	packet.payload = payload_data; 
+   #endif 
     // Send
     packet_send_status status = send_ahoi_data(sv[0], &packet);
     assert_int_equal(status, PACKET_SEND_OK);
@@ -58,7 +66,6 @@ static void send_ahoi_packet_test(void **state) {
 
 static void send_ahoi_packet_null_payload_test(void **state) {
     (void) state;
-
     ahoi_packet_t packet = {0};
     packet.payload = NULL;  // Intentionally invalid
     packet.pl_size = 4;

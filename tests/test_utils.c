@@ -119,3 +119,19 @@ void fill_rack_resp(int fd, const ahoi_packet_t* const data) {
     size_t len = ahoi_serialize_rx(&rack, &footer, msg);
     write(fd, (void*) msg, len);
 }
+
+uint8_t mock_sensor_value(void)
+{ 
+uint8_t v = 0; 
+generate_random_bytes(&v, 1);
+return v; 
+}
+
+size_t build_dummy_payload(uint8_t *buf, size_t buf_len) 
+{ 
+	if  (buf == NULL || buf_len < 1 ){
+		return 0; }
+buf[0]= mock_sensor_value();
+return 1; 
+}
+
